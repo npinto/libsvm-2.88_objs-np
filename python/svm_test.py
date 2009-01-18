@@ -27,6 +27,7 @@ for k in kernels:
 
 param = svm_parameter(kernel_type = RBF, C=10)
 model = svm_model(problem, param)
+print "objs:", model.objs
 print "##########################################"
 print " Decision values of predicting %s" % (samples[0])
 print "##########################################"
@@ -40,6 +41,7 @@ for i in model.get_labels():
 
 param = svm_parameter(kernel_type = RBF, C=10, probability = 1)
 model = svm_model(problem, param)
+print "objs:", model.objs
 pred_label, pred_probability = model.predict_probability(samples[1])
 print "##########################################"
 print " Probability estimate of predicting %s" % (samples[1])
@@ -55,4 +57,5 @@ samples = [[1, 0, 0, 0, 0], [2, 0, 1, 0, 1], [3, 0, 0, 1, 1], [4, 0, 1, 1, 2]]
 problem = svm_problem(labels, samples);
 param = svm_parameter(kernel_type=PRECOMPUTED,C = 10,nr_weight = 2,weight_label = [1,0],weight = [10,1])
 model = svm_model(problem, param)
+print "objs:", model.objs
 pred_label = model.predict(samples[0])

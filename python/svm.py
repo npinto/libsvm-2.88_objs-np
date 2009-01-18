@@ -190,6 +190,11 @@ class svm_model:
 		svmc.delete_int(intarr)
 		#check if valid probability model
 		self.probability = svmc.svm_check_probability_model(self.model)
+		
+		self.objs = []
+		for i in xrange(len(self.labels)):
+			self.objs += [svmc.svm_get_obj(self.model, i)]
+		
 
 	def predict(self,x):
 		data = _convert_to_svm_node_array(x)

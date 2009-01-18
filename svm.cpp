@@ -1622,6 +1622,7 @@ struct decision_function
 {
 	double *alpha;
 	double rho;	
+        double obj;
 };
 
 decision_function svm_train_one(
@@ -1678,6 +1679,7 @@ decision_function svm_train_one(
 	decision_function f;
 	f.alpha = alpha;
 	f.rho = si.rho;
+	f.obj = si.obj;
 	return f;
 }
 
@@ -1694,6 +1696,8 @@ struct svm_model
 	double *rho;		// constants in decision functions (rho[k*(k-1)/2])
 	double *probA;          // pariwise probability information
 	double *probB;
+
+	double *obj;
 
 	// for classification only
 
@@ -2102,6 +2106,8 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		decision_function f = svm_train_one(prob,param,0,0);
 		model->rho = Malloc(double,1);
 		model->rho[0] = f.rho;
+		model->obj = Malloc(double,1);
+		model->obj[0] = f.obj;
 
 		int nSV = 0;
 		int i;
@@ -2215,8 +2221,13 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 			model->label[i] = label[i];
 		
 		model->rho = Malloc(double,nr_class*(nr_class-1)/2);
+		model->obj = Malloc(double,nr_class*(nr_class-1)/2);
 		for(i=0;i<nr_class*(nr_class-1)/2;i++)
-			model->rho[i] = f[i].rho;
+		  {
+		    model->rho[i] = f[i].rho;
+		    model->obj[i] = f[i].obj;
+		  }
+
 
 		if(param->probability)
 		{
@@ -2426,6 +2437,10 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 	free(perm);	
 }
 
+double svm_get_obj(const svm_model *model, const int i)
+{
+	return model->obj[i];
+}
 
 int svm_get_svm_type(const svm_model *model)
 {
@@ -2706,6 +2721,8 @@ svm_model *svm_load_model(const char *model_file_name)
 	model->label = NULL;
 	model->nSV = NULL;
 
+	model->obj = NULL;
+
 	char cmd[81];
 	while(1)
 	{
@@ -2727,6 +2744,7 @@ svm_model *svm_load_model(const char *model_file_name)
 			{
 				fprintf(stderr,"unknown svm type.\n");
 				free(model->rho);
+				free(model->obj);
 				free(model->label);
 				free(model->nSV);
 				free(model);
@@ -2749,6 +2767,7 @@ svm_model *svm_load_model(const char *model_file_name)
 			{
 				fprintf(stderr,"unknown kernel function.\n");
 				free(model->rho);
+				free(model->obj);
 				free(model->label);
 				free(model->nSV);
 				free(model);
@@ -2813,6 +2832,7 @@ svm_model *svm_load_model(const char *model_file_name)
 		{
 			fprintf(stderr,"unknown text in model file: [%s]\n",cmd);
 			free(model->rho);
+			free(model->obj);
 			free(model->label);
 			free(model->nSV);
 			free(model);
@@ -2889,6 +2909,7 @@ void svm_destroy_model(svm_model* model)
 	free(model->SV);
 	free(model->sv_coef);
 	free(model->rho);
+	free(model->obj);
 	free(model->label);
 	free(model->probA);
 	free(model->probB);
